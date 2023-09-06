@@ -36,6 +36,13 @@ public abstract class TreeNode<Key extends Comparable<Key>, Val extends NodeValu
     }
 
 
+    public Key removeLastKey(){
+        return keys.remove(keys.size() - 1);
+    }
+    public Key removeFirstKey(){
+        return keys.remove(0);
+    }
+
 
     public List<Key> getKeys() {
         return keys;
@@ -56,5 +63,34 @@ public abstract class TreeNode<Key extends Comparable<Key>, Val extends NodeValu
      */
     public boolean isLeaf(){
         return type == NodeType.LEAF || type == NodeType.ROOT_LEAF;
+    }
+
+    /**
+     * 获取左兄弟节点
+     */
+    public TreeNode<Key,Val> getLeftSiblings(){
+        if (parentNode == null) {
+            return null;
+        }
+        List<TreeNode<Key,Val>> nodes = parentNode.getSubNodes();
+        int curIndex = nodes.indexOf(this);
+        if(curIndex > 0){
+            return nodes.get(curIndex - 1);
+        }
+        return null;
+    }
+    /**
+     *获取右兄弟节点
+     */
+    public TreeNode<Key,Val> getRightSiblings(){
+        if (parentNode == null) {
+            return null;
+        }
+        List<TreeNode<Key,Val>> nodes = parentNode.getSubNodes();
+        int curIndex = nodes.indexOf(this);
+        if(curIndex < nodes.size() - 1){
+            return nodes.get(curIndex + 1);
+        }
+        return null;
     }
 }

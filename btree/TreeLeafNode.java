@@ -46,4 +46,20 @@ public class TreeLeafNode<Key extends Comparable<Key>,Val extends NodeValue<Key>
     public void setRightNode(TreeLeafNode<Key, Val> rightNode) {
         this.rightNode = rightNode;
     }
+
+    @Override
+    public TreeLeafNode<Key, Val> getLeftSiblings() {
+        return (TreeLeafNode<Key, Val>) super.getLeftSiblings();
+    }
+
+    @Override
+    public TreeLeafNode<Key, Val> getRightSiblings() {
+        return (TreeLeafNode<Key, Val>) super.getRightSiblings();
+    }
+    public Val removeLastVal(){
+        return values.remove(values.size() - 1);
+    }
+    public Val removeFirstVal(){
+        return values.remove(0);
+    }
 }

@@ -14,6 +14,11 @@ public class BPlusTree<Key extends Comparable<Key>, Val extends NodeValue<Key>> 
      * b+ 树 度的数量
      */
     private final int m;
+
+    public TreeNode<Key, Val> getRootNode() {
+        return rootNode;
+    }
+
     private TreeNode<Key, Val> rootNode;
 
     public BPlusTree(int m) {
@@ -48,9 +53,12 @@ public class BPlusTree<Key extends Comparable<Key>, Val extends NodeValue<Key>> 
             List<Key> keyList = from.getKeys();
             int i = 0;
             for (; i < keyList.size(); i++) {
-                if (le(k, keyList.get(i))) {
+                if (lt(k, keyList.get(i))) {
                     from = indexNode.getSubNodes().get(i);
                     break;
+                } else if(eq(k,keyList.get(i))&& i + 1 < indexNode.getSubNodes().size()){
+                   from = indexNode.getSubNodes().get(i+1) ;
+                   break;
                 }
             }
             //未找到，那就是最后一个
@@ -61,6 +69,9 @@ public class BPlusTree<Key extends Comparable<Key>, Val extends NodeValue<Key>> 
         return (TreeLeafNode<Key, Val>) from;
     }
 
+    /**
+     *如果key 相同的val已经存在，会进行替换
+     */
     public void insert(Val val) {
         //插入根节点
         if (rootNode == null) {
@@ -74,6 +85,12 @@ public class BPlusTree<Key extends Comparable<Key>, Val extends NodeValue<Key>> 
         //根据key找到指定的位置
         Key k = val.getKey();
         TreeLeafNode<Key, Val> insertedNode = searchNode(k);
+        int index =insertedNode.getKeys().indexOf(val.getKey());
+        //如果key相同，进行替换，这样就不会有重复的key出现
+        if(index >= 0){
+            insertedNode.getValues().set(index, val);
+            return;
+        }
         doInsertNode(val, insertedNode);
     }
 
@@ -90,7 +107,6 @@ public class BPlusTree<Key extends Comparable<Key>, Val extends NodeValue<Key>> 
                 break;
             }
         }
-        //末尾追加即可
         if (insertIndex == -1) {
             keys.add(val.getKey());
             values.add(val);
@@ -115,7 +131,6 @@ public class BPlusTree<Key extends Comparable<Key>, Val extends NodeValue<Key>> 
         parentNode.getSubNodes().set(index, right);
         parentNode.getSubNodes().add(index, left);
 
-        // key不存在才会进行插入
         //插入key
         int insertIndex = -1;
         for (int i = 0; i < parentNode.getKeys().size(); i++) {
@@ -124,7 +139,6 @@ public class BPlusTree<Key extends Comparable<Key>, Val extends NodeValue<Key>> 
                 break;
             }
         }
-        //末尾追加即可
         if (insertIndex == -1) {
             parentNode.addKey(k);
         } else {
@@ -192,9 +206,10 @@ public class BPlusTree<Key extends Comparable<Key>, Val extends NodeValue<Key>> 
             left.addKey(indexNode.getKeys().get(i));
         }
         final Iterator<TreeNode<Key, Val>> each = indexNode.getSubNodes().iterator();
+        Key mid = indexNode.getKeys().get(m / 2);
         while (each.hasNext()) {
             TreeNode<Key, Val> cur = each.next();
-            if (lt(cur.getLastKey(), indexNode.getKeys().get(m / 2))) {
+            if (lt(cur.getLastKey(), mid)) {
                 left.addNode(cur);
                 cur.setParentNode(left);
                 each.remove();
@@ -232,8 +247,173 @@ public class BPlusTree<Key extends Comparable<Key>, Val extends NodeValue<Key>> 
         splitIndexNode((TreeIndexNode<Key, Val>) t);
     }
 
+
+
     public boolean isFull(TreeNode<Key, Val> t) {
         return t.getKeys().size() >= m;
+    }
+
+
+    public boolean isEmpty(TreeNode<Key, Val> t) {
+        return t.getKeys().size() <= m /2 - 1;
+    }
+
+    /**
+     * 节点是否富裕
+     */
+    public boolean isRich(TreeNode<Key, Val> t) {
+        return t.getKeys().size() > m/2;
+    }
+
+    public void delete(Key key) {
+        TreeLeafNode<Key,Val> node = searchNode(key);
+        if (node == null) {
+            throw new RuntimeException("key不存在:" + key);
+        }
+        doLeafNodeDelete(node, key);
+    }
+    private void doLeafNodeDelete(TreeLeafNode<Key, Val> node, Key key) {
+        //删除节点
+        int index = node.getKeys().indexOf(key);
+        node.getKeys().remove(index);
+        node.getValues().remove(index);
+        //如果是root节点直接删除返回
+        if (node.getParentNode() == null) {
+            if (node.getKeys().isEmpty()) {
+                rootNode = null;
+            }
+            return;
+        }
+        //不用调整，直接结束
+        if (!isEmpty(node)) {
+            return;
+        }
+        //获取当前节点在父节点中的顺序
+        int nodeIndex = node.getParentNode().getSubNodeIndex(node);
+        //左兄弟有富裕，借一个key
+        if (node.getLeftSiblings() != null) {
+            TreeLeafNode<Key,Val> leftSiblings = node.getLeftSiblings();
+            if(isRich(leftSiblings)){
+                Key lastKey = leftSiblings.removeLastKey();
+                node.getKeys().add(0,lastKey);
+                node.getValues().add(0,leftSiblings.removeLastVal());
+                //调整key 为 借的兄弟节点的key
+                //左兄弟的最后一个key（借的哪一个）替换为父节点上面的key
+                node.getParentNode().getKeys().set(nodeIndex - 1, lastKey);
+                return;
+            }
+        }
+        //右兄弟有富裕，借一个key
+        if (node.getRightSiblings() != null) {
+            TreeLeafNode<Key,Val> rightSiblings = node.getRightSiblings();
+            if (isRich(rightSiblings)) {
+                node.getKeys().add(0,rightSiblings.removeFirstKey());
+                node.getValues().add(0,rightSiblings.removeFirstVal());
+                //右兄弟的第一个key（借过之后的第一个）替换为父节点上面的key
+                node.getParentNode().getKeys().set(nodeIndex, rightSiblings.getKeys().get(0));
+                return;
+            }
+        }
+        //无富裕，尝试合并
+        if (node.getLeftSiblings() != null) {
+            TreeLeafNode<Key,Val> leftSiblings = node.getLeftSiblings();
+                //合并
+                //从父节点中删除node
+                node.getParentNode().getSubNodes().remove(node);
+                leftSiblings.getKeys().addAll(node.getKeys());
+                leftSiblings.getValues().addAll(node.getValues());
+                //删除父节点中多余的key
+                node.getParentNode().getKeys().remove(nodeIndex - 1);
+            if (!isEmpty(node.getParentNode())) {
+                return;
+            }
+            //处理父节点
+            doIndexNodeDelete(node.getParentNode());
+            return;
+        }
+        if (node.getRightSiblings() != null) {
+            //合并
+            TreeLeafNode<Key,Val> rightSiblings = node.getRightSiblings();
+            node.getParentNode().getSubNodes().remove(node);
+            for (Key k : node.getKeys()) {
+                rightSiblings.getKeys().add(0,k);
+            }
+            for (Val v : node.getValues()) {
+                rightSiblings.getValues().add(0,v);
+            }
+            //删除父节点中多余的key
+            node.getParentNode().getKeys().remove(nodeIndex);
+            if (!isEmpty(node.getParentNode())) {
+                return;
+            }
+            //处理父节点
+            doIndexNodeDelete(node.getParentNode());
+            return;
+        }
+    }
+    private void doIndexNodeDelete(TreeIndexNode<Key, Val> node) {
+        int nodeIndex = node.getParentNode().getSubNodeIndex(node);
+        if (node.getLeftSiblings() != null) {
+            TreeIndexNode<Key,Val> leftSiblings = node.getLeftSiblings();
+            if (isRich(leftSiblings)) {
+                Key t = node.getParentNode().getKeys().get(nodeIndex - 1);
+                Key t2 = leftSiblings.removeLastKey();
+                //兄弟节点key上移动
+                node.getParentNode().getKeys().set(nodeIndex - 1, t2);
+                //父节点key下一移动，移动到左兄弟结束位置
+                leftSiblings.getKeys().add(t);
+                return;
+            }
+        }
+        if (node.getRightSiblings() != null) {
+            TreeIndexNode<Key,Val> rightSiblings = node.getRightSiblings();
+            if (isRich(rightSiblings)) {
+                Key t = node.getParentNode().getKeys().get(nodeIndex);
+                Key t2 = rightSiblings.removeFirstKey();
+                //兄弟节点key上移动
+                node.getParentNode().getKeys().set(nodeIndex, t2);
+                //父节点key下移动，移动到右兄弟开始位置
+                rightSiblings.getKeys().add(0,t);
+                return;
+            }
+        }
+        if (node.getLeftSiblings() != null) {
+           //合并
+            TreeIndexNode<Key,Val> leftSiblings = node.getLeftSiblings();
+            //删除父节点中的key
+            Key t = node.getParentNode().getKeys().remove(nodeIndex - 1);
+            leftSiblings.getKeys().add(t);
+            leftSiblings.getKeys().addAll(node.getKeys());
+            //删除node节点，合并成 leftSibling了
+            node.getParentNode().getSubNodes().remove(node);
+            //root情况特殊处理
+            if (node.getParentNode() == rootNode && rootNode.getKeys().isEmpty()) {
+                rootNode = leftSiblings;
+                leftSiblings.setParentNode(null);
+                return;
+            }
+            if(!isRich(leftSiblings)){
+                doIndexNodeDelete(leftSiblings);
+                return;
+            }
+        }
+        if (node.getRightSiblings() != null){
+           //合并
+            TreeIndexNode<Key,Val> rightSiblings = node.getRightSiblings();
+            Key t = node.getParentNode().getKeys().get(nodeIndex);
+            node.getKeys().add(t);
+            node.getKeys().addAll(rightSiblings.getKeys());
+            node.getParentNode().getSubNodes().remove(rightSiblings);
+            if (node.getParentNode() == rootNode && rootNode.getKeys().isEmpty()) {
+                rootNode = node;
+                node.setParentNode(null);
+                return;
+            }
+            if(!isRich(node)){
+                doIndexNodeDelete(node);
+            }
+
+        }
     }
 
 
