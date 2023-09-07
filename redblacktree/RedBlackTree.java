@@ -31,6 +31,8 @@ public class RedBlackTree <Key extends Comparable<Key>,Val extends NodeValue<Key
             return;
         }
         color(node);
+        //根节点染成黑色
+        root.setColor(ColorEnum.BLACK);
     }
 
     public void color(TreeNode<Key, Val> cur) {
@@ -38,8 +40,9 @@ public class RedBlackTree <Key extends Comparable<Key>,Val extends NodeValue<Key
             return;
         }
         TreeNode<Key, Val> parent = cur.getParent();
+        TreeNode<Key,Val> siblings = parent.getSiblings();
         // case3 当前节点 N 的父节点 P 和叔节点 U 均为红色
-        if (parent.getColor() == ColorEnum.RED && parent.getParent().getSiblings().getColor() == ColorEnum.RED) {
+        if (parent.getColor() == ColorEnum.RED && siblings != null && siblings.getColor() == ColorEnum.RED) {
             parent.setColor(ColorEnum.BLACK);
             parent.getSiblings().setColor(ColorEnum.BLACK);
             parent.getParent().setColor(ColorEnum.RED);

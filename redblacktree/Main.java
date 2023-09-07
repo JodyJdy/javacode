@@ -6,26 +6,14 @@
  */
 public class Main {
     public static void main(String[] args) {
-        TreeNode<String, Person> root = new TreeNode<>(new Person("root"));
-        TreeNode<String,Person> n = new TreeNode<>(new Person("n"));
-        TreeNode<String,Person> l = new TreeNode<>(new Person("l"));
-        TreeNode<String,Person> s = new TreeNode<>(new Person("s"));
-        TreeNode<String,Person> m = new TreeNode<>(new Person("m"));
-        TreeNode<String,Person> r = new TreeNode<>(new Person("r"));
+        RedBlackTree<String ,Person> tree = new RedBlackTree<>();
 
-        root.setLeft(n);
-        n.setParent(root);
-        n.setLeft(l);
-        l.setParent(n);
-        n.setRight(s);
-        s.setParent(n);
-        s.setLeft(m);
-        s.setRight(r);
-        m.setParent(s);
-        r.setParent(s);
-        RedBlackTree<String , Person> redBlackTree = new RedBlackTree<String , Person>();
-        redBlackTree.rotateLeft(root.getLeft());
-        show(root);
+        tree.insert(new Person("1"));
+        tree.insert(new Person("2"));
+        tree.insert(new Person("3"));
+        tree.insert(new Person("4"));
+        tree.insert(new Person("5"));
+
 
     }
     public static <K extends Comparable<K>,V extends NodeValue<K>> void  show(TreeNode<K,V>node){
