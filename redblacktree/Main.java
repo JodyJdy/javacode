@@ -13,6 +13,15 @@ public class Main {
         tree.insert(new Person("3"));
         tree.insert(new Person("4"));
         tree.insert(new Person("5"));
+        tree.insert(new Person("6"));
+        for (int i = 7; i < 100; i++) {
+            tree.insert(new Person(i+""));
+        }
+
+
+        System.out.println(tree.search("1"));
+        System.out.println(tree.search("2"));
+
 
 
     }

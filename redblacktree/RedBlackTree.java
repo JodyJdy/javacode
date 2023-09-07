@@ -39,6 +39,10 @@ public class RedBlackTree <Key extends Comparable<Key>,Val extends NodeValue<Key
         if (root.equals(cur)) {
             return;
         }
+        if (root.equals(cur.getParent())) {
+            root.setColor(ColorEnum.BLACK);
+            return;
+        }
         TreeNode<Key, Val> parent = cur.getParent();
         TreeNode<Key,Val> siblings = parent.getSiblings();
         // case3 当前节点 N 的父节点 P 和叔节点 U 均为红色
@@ -56,9 +60,10 @@ public class RedBlackTree <Key extends Comparable<Key>,Val extends NodeValue<Key
             } else{
                 rotateLeft(parent);
             }
-            color(parent);
-            return;
+            cur = parent;
         }
+        // 如果经过了case4 cur发生了变化，需要从重新计算 parent
+        parent = cur.getParent();
         // case 5  当前节点 N 与父节点 P 的方向相同
         if (cur.getDirection() == parent.getDirection()) {
             TreeNode<Key,Val> grandPa = parent.getParent();
@@ -96,7 +101,21 @@ public class RedBlackTree <Key extends Comparable<Key>,Val extends NodeValue<Key
     }
 
     public Val search(Key k) {
-        return null;
+        return doSearch(k,root);
+    }
+
+    public Val doSearch(Key k, TreeNode<Key, Val> from) {
+        if (from == null) {
+            return null;
+        }
+        Key f = from.getVal().getKey();
+        if(eq(k,f)){
+            return from.getVal();
+        }
+        if(lt(k,f)){
+            return doSearch(k,from.getLeft());
+        }
+        return doSearch(k,from.getRight());
     }
     public TreeNode<Key, Val> searchNode(Key k) {
         return null;
@@ -130,8 +149,10 @@ public class RedBlackTree <Key extends Comparable<Key>,Val extends NodeValue<Key
         TreeNode<Key,Val> newNode = node.getRight();
 
         node.setRight(newNode.getLeft());
+        if (newNode.getLeft() != null) {
+            newNode.getLeft().setParent(node);
+        }
         newNode.setLeft(node);
-
         //设置父节点中的子节点为 newNode
         switch (node.getDirection()) {
             case ROOT:this.root = newNode;break;
@@ -167,6 +188,9 @@ public class RedBlackTree <Key extends Comparable<Key>,Val extends NodeValue<Key
         TreeNode<Key,Val> newNode = node.getLeft();
 
         node.setLeft(newNode.getRight());
+        if (newNode.getRight() != null) {
+            newNode.getRight().setParent(node);
+        }
         newNode.setRight(node);
 
         //设置父节点中的子节点为 newNode
