@@ -16,6 +16,11 @@ public class TreeNode<Key extends Comparable<Key>,Val extends NodeValue<Key>> {
         this.val = val;
     }
 
+    public TreeNode(ColorEnum color, Val val) {
+        this.color = color;
+        this.val = val;
+    }
+
     /**
      * 在父节点中的方向
      */
@@ -70,5 +75,18 @@ public class TreeNode<Key extends Comparable<Key>,Val extends NodeValue<Key>> {
 
     public void setRight(TreeNode<Key, Val> right) {
         this.right = right;
+    }
+
+
+    /**
+     * 获取兄弟节点
+     */
+    public TreeNode<Key,Val> getSiblings(){
+        switch (getDirection()) {
+            case LEFT: return parent.getRight();
+            case RIGHT: return parent.getLeft();
+            default: return null;
+        }
+
     }
 }

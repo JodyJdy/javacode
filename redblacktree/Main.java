@@ -14,15 +14,17 @@ public class Main {
         TreeNode<String,Person> r = new TreeNode<>(new Person("r"));
 
         root.setLeft(n);
-
+        n.setParent(root);
         n.setLeft(l);
-        n.setRight(s);
         l.setParent(n);
+        n.setRight(s);
         s.setParent(n);
         s.setLeft(m);
         s.setRight(r);
         m.setParent(s);
-        r.setRight(s);
+        r.setParent(s);
+        RedBlackTree<String , Person> redBlackTree = new RedBlackTree<String , Person>();
+        redBlackTree.rotateLeft(root.getLeft());
         show(root);
 
     }
@@ -46,6 +48,13 @@ public class Main {
 
         public Person(String key) {
             this.key = key;
+        }
+
+        @Override
+        public String toString() {
+            return "Person{" +
+                    "key='" + key + '\'' +
+                    '}';
         }
     }
 }
