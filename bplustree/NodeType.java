@@ -13,11 +13,6 @@ public enum NodeType {
 
     ;
 
-    private final String type;
-    private final int value;
-
     NodeType(String type, int value) {
-        this.type = type;
-        this.value = value;
     }
 }
