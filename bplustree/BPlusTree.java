@@ -253,7 +253,7 @@ public class BPlusTree<Key extends Comparable<Key>, Val extends NodeValue<Key>> 
      * 节点是否不平衡
      */
     public boolean isEmpty(TreeNode<Key, Val> t) {
-        return !(t.getKeys().size() > (m - 1) / 2 - 1);
+        return t.getKeys().size() <= ((m - 1) / 2 - 1);
     }
 
     /**
@@ -426,6 +426,7 @@ public class BPlusTree<Key extends Comparable<Key>, Val extends NodeValue<Key>> 
                 doIndexNodeDelete(leftSiblings.getParentNode());
                 return;
             }
+            return;
         }
         if (node.getRightSiblings() != null) {
             //合并
@@ -447,6 +448,7 @@ public class BPlusTree<Key extends Comparable<Key>, Val extends NodeValue<Key>> 
             if (!node.getParentNode().equals(rootNode) && isEmpty(node.getParentNode())) {
                 doIndexNodeDelete(node.getParentNode());
             }
+            return;
         }
     }
 }
