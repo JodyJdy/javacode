@@ -1,1 +1,12 @@
-some java algorithm code, including  bplus tree,avl tree, red black tree, etc
+some java algorithm code 
+
+* avlTree
+* bloomFilter
+* bPlusTree
+* circleBuffer
+* consistentHash
+* quadtree
+* redBlackTree
+* segmentTree
+* trie
+* rateLimiter:  fixedWindow,slidingWindow,leakyBucket,tokenBucket 
